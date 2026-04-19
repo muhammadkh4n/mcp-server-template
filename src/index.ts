@@ -59,8 +59,15 @@ async function startHTTPTransport(port: number) {
       return;
     }
 
+    // Minimal liveness probe
+    if (req.url === '/healthz' && req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true }));
+      return;
+    }
+
     // Health check endpoint
-    if (req.url === '/health' || req.url === '/healthz') {
+    if (req.url === '/health') {
       const status = await healthMonitor.getStatus();
       const statusCode = status.status === 'healthy' ? 200 : 503;
       res.writeHead(statusCode, { 'Content-Type': 'application/json' });
