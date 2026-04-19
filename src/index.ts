@@ -7,6 +7,9 @@
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { createServer, IncomingMessage, ServerResponse } from 'node:http';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 import { config } from 'dotenv';
 import { createMCPServer } from './server.js';
 import { logger } from './middleware/logging.js';
@@ -56,6 +59,15 @@ async function startHTTPTransport(port: number) {
     if (req.method === 'OPTIONS') {
       res.writeHead(200);
       res.end();
+      return;
+    }
+
+    // Version endpoint
+    if (req.url === '/version' && req.method === 'GET') {
+      const pkgPath = join(dirname(fileURLToPath(import.meta.url)), '..', 'package.json');
+      const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ version: pkg.version }));
       return;
     }
 
